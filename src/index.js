@@ -132,12 +132,13 @@ app.put("/like/:name", async (req, res) => {
     try {
         const { name } = req.params;
         const { email } = req.body;
-        const userResult = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
 
+        const userResult = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
         const vtuberResult = await pool.query("SELECT * FROM vtuber WHERE name = $1", [name])
 
         const user = userResult?.rows[0];
         const vtuber = vtuberResult?.rows[0];
+
 
         const userLikes = user.likes;
         const vtuberLikes = vtuber.likes;
@@ -152,8 +153,9 @@ app.put("/like/:name", async (req, res) => {
 
 
 
-        const updateVtuber = await pool.query("UPDATE vtuber SET likes = $1 RETURNING *", [vtuberLikes])
-        const updateUser = await pool.query("UPDATE users SET likes = $1 RETURNING *", [userLikes])
+        const updateVtuber = await pool.query("UPDATE vtuber SET likes = $1 WHERE name = $2 RETURNING *", [vtuberLikes, name])
+
+        const updateUser = await pool.query("UPDATE users SET likes = $1 WHERE email = $2 RETURNING *", [userLikes, email])
         res.send({
             user: updateUser?.rows[0],
             vtuber: updateVtuber?.rows[0]
